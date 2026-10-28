@@ -1,0 +1,53 @@
+
+name: Deploy Advocate Sathi Admin Panel
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find and extract Admin Panel ZIP
+        run: |
+          set -e
+          ZIP_FILE="$(find . -maxdepth 2 -type f -name 'Advocate-Sathi-Admin-Panel-GitHub-Pages.zip' -print -quit)"
+          if [ -z "$ZIP_FILE" ]; then
+            echo "Admin Panel ZIP not found."
+            find . -maxdepth 3 -type f
+            exit 1
+          fi
+          mkdir -p site
+          unzip -o "$ZIP_FILE" -d site
+          test -f site/index.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload website artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
