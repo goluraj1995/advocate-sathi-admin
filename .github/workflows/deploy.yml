@@ -27,18 +27,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Find and extract Admin Panel ZIP
+      - name: Extract Admin Panel ZIP
         run: |
           set -e
-          ZIP_FILE="$(find . -maxdepth 2 -type f -name 'Advocate-Sathi-Admin-Panel-GitHub-Pages.zip' -print -quit)"
-          if [ -z "$ZIP_FILE" ]; then
-            echo "Admin Panel ZIP not found."
-            find . -maxdepth 3 -type f
-            exit 1
-          fi
+          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages.zip"
+          test -f "$ZIP_FILE"
           mkdir -p site
           unzip -o "$ZIP_FILE" -d site
-          test -f site/index.html
+          echo "Files extracted:"
+          find site -maxdepth 3 -type f | sort
+          echo "Root index:"
+          head -n 15 site/index.html
+          test -s site/index.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
