@@ -27,16 +27,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract PDF Import Admin Panel ZIP
+      - name: Extract Fixed PDF Import ZIP
         run: |
           set -e
-          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import.zip"
+          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-FIXED.zip"
           test -f "$ZIP_FILE"
           mkdir -p site
           unzip -o "$ZIP_FILE" -d site
-          echo "Extracted files:"
+          echo "Extracted website files:"
           find site -maxdepth 3 -type f | sort
           test -s site/index.html
+          test -s site/lib/pdf.min.js
+          test -s site/lib/pdf.worker.min.js
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
