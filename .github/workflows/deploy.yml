@@ -1,11 +1,10 @@
-
 name: Deploy Advocate Sathi Admin Panel
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,12 +13,11 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -28,55 +26,40 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify v4 ZIP
-        shell: bash
-        run: |
-          set -euo pipefail
-          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-PARSER-FIX-v5.zip"
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
 
-          if [ ! -s "$ZIP_FILE" ]; then
-            echo "::error::v4 ZIP not found or empty: $ZIP_FILE"
-            echo "ZIP files in repository root:"
-            find . -maxdepth 1 -type f -iname '*.zip' -print
+      - name: Extract v8 ZIP
+        run: |
+          set -e
+          ZIP="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-PARSER-FIX-v8.zip"
+
+          if [ ! -f "$ZIP" ]; then
+            echo "::error::v8 ZIP repository root mein nahi mili."
+            ls -la
             exit 1
           fi
 
-          echo "v4 ZIP found:"
-          ls -lh "$ZIP_FILE"
-
-          echo "Checking ZIP integrity..."
-          unzip -t "$ZIP_FILE"
-
-      - name: Extract v4 ZIP
-        shell: bash
-        run: |
-          set -euo pipefail
-          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-PARSER-FIX-v4.zip"
-
           mkdir -p site
-          unzip -o "$ZIP_FILE" -d site
+          unzip -oq "$ZIP" -d site
 
-          echo "Checking required files..."
-          for FILE in \
-            site/index.html \
-            site/lib/pdf.min.js \
-            site/lib/pdf.worker.min.js \
-            site/js/pdf-parser.js
-          do
-            if [ ! -s "$FILE" ]; then
-              echo "::error::Required file missing: $FILE"
-              echo "Extracted files:"
-              find site -maxdepth 4 -type f -print
-              exit 1
-            fi
-          done
+          if [ -d site/public ] && [ -f site/public/index.html ] && [ ! -f site/index.html ]; then
+            cp -a site/public/. site/
+          fi
 
-          echo "All required files found."
+          if [ ! -f site/index.html ]; then
+            echo "::error::ZIP ke andar index.html nahi mili."
+            find site -maxdepth 4 -type f
+            exit 1
+          fi
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
+          test -f site/lib/pdf.min.js
+          test -f site/lib/pdf.worker.min.js
+          test -f site/js/pdf-parser.js
 
-      - name: Upload website artifact
+          echo "v8 ZIP files verified."
+
+      - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
