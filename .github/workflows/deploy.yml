@@ -1,3 +1,4 @@
+
 name: Deploy Advocate Sathi Admin Panel
 
 on:
@@ -27,17 +28,64 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Verify Parser Fix ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-PARSER-FIX-v2.zip"
+
+          echo "Checking ZIP file..."
+
+          if [ ! -f "$ZIP_FILE" ]; then
+            echo "::error::ZIP file not found: $ZIP_FILE"
+            echo "ZIP files available in repository root:"
+            find . -maxdepth 1 -type f -iname '*.zip' -print
+            exit 1
+          fi
+
+          if [ ! -s "$ZIP_FILE" ]; then
+            echo "::error::ZIP file is empty."
+            exit 1
+          fi
+
+          echo "ZIP file found."
+          ls -lh "$ZIP_FILE"
+
+          echo "Testing ZIP integrity..."
+          unzip -t "$ZIP_FILE"
+
       - name: Extract Parser Fix ZIP
         shell: bash
         run: |
           set -euo pipefail
-          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-PARSER-FIX.zip"
-          test -f "$ZIP_FILE"
+
+          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-PARSER-FIX-v2.zip"
+
           mkdir -p site
           unzip -o "$ZIP_FILE" -d site
-          test -s site/index.html
-          test -s site/lib/pdf.min.js
-          test -s site/lib/pdf.worker.min.js
+
+          echo "Checking extracted website files..."
+
+          if [ ! -s site/index.html ]; then
+            echo "::error::site/index.html not found. ZIP folder structure may be incorrect."
+            find site -maxdepth 4 -type f -print
+            exit 1
+          fi
+
+          if [ ! -s site/lib/pdf.min.js ]; then
+            echo "::error::site/lib/pdf.min.js not found."
+            find site -maxdepth 4 -type f -print
+            exit 1
+          fi
+
+          if [ ! -s site/lib/pdf.worker.min.js ]; then
+            echo "::error::site/lib/pdf.worker.min.js not found."
+            find site -maxdepth 4 -type f -print
+            exit 1
+          fi
+
+          echo "Required website files verified."
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
