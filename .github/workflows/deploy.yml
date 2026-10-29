@@ -28,64 +28,52 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify Parser Fix ZIP
+      - name: Verify v3 ZIP
         shell: bash
         run: |
           set -euo pipefail
 
-          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-PARSER-FIX-v2.zip"
+          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-PARSER-FIX-v3.zip"
 
-          echo "Checking ZIP file..."
-
-          if [ ! -f "$ZIP_FILE" ]; then
-            echo "::error::ZIP file not found: $ZIP_FILE"
-            echo "ZIP files available in repository root:"
+          if [ ! -s "$ZIP_FILE" ]; then
+            echo "::error::v3 ZIP not found or empty: $ZIP_FILE"
+            echo "ZIP files in repository root:"
             find . -maxdepth 1 -type f -iname '*.zip' -print
             exit 1
           fi
 
-          if [ ! -s "$ZIP_FILE" ]; then
-            echo "::error::ZIP file is empty."
-            exit 1
-          fi
-
-          echo "ZIP file found."
+          echo "v3 ZIP found:"
           ls -lh "$ZIP_FILE"
 
-          echo "Testing ZIP integrity..."
+          echo "Checking ZIP integrity..."
           unzip -t "$ZIP_FILE"
 
-      - name: Extract Parser Fix ZIP
+      - name: Extract v3 ZIP
         shell: bash
         run: |
           set -euo pipefail
 
-          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-PARSER-FIX-v2.zip"
+          ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-PARSER-FIX-v3.zip"
 
           mkdir -p site
           unzip -o "$ZIP_FILE" -d site
 
-          echo "Checking extracted website files..."
+          echo "Checking required files..."
 
-          if [ ! -s site/index.html ]; then
-            echo "::error::site/index.html not found. ZIP folder structure may be incorrect."
-            find site -maxdepth 4 -type f -print
-            exit 1
-          fi
+          for FILE in \
+            site/index.html \
+            site/lib/pdf.min.js \
+            site/lib/pdf.worker.min.js
+          do
+            if [ ! -s "$FILE" ]; then
+              echo "::error::Required file missing: $FILE"
+              echo "Files extracted from ZIP:"
+              find site -maxdepth 4 -type f -print
+              exit 1
+            fi
+          done
 
-          if [ ! -s site/lib/pdf.min.js ]; then
-            echo "::error::site/lib/pdf.min.js not found."
-            find site -maxdepth 4 -type f -print
-            exit 1
-          fi
-
-          if [ ! -s site/lib/pdf.worker.min.js ]; then
-            echo "::error::site/lib/pdf.worker.min.js not found."
-            find site -maxdepth 4 -type f -print
-            exit 1
-          fi
-
-          echo "Required website files verified."
+          echo "All required files found."
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
