@@ -26,14 +26,13 @@ steps:
   - name: Checkout repository
     uses: actions/checkout@v4
   - name: Extract Parser Fix ZIP
+    shell: bash
     run: |
-      set -e
+      set -euo pipefail
       ZIP_FILE="Advocate-Sathi-Admin-Panel-GitHub-Pages-PDF-Import-PARSER-FIX.zip"
       test -f "$ZIP_FILE"
       mkdir -p site
       unzip -o "$ZIP_FILE" -d site
-      echo "Extracted website files:"
-      find site -maxdepth 3 -type f | sort
       test -s site/index.html
       test -s site/lib/pdf.min.js
       test -s site/lib/pdf.worker.min.js
